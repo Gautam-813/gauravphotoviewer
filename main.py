@@ -63,7 +63,7 @@ async def read_home(request: Request):
     
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "title": "Telegram Image Gallery",
+        "title": "Gaurav's Photos - Precious Moments",
         "is_mobile": is_mobile
     })
 
@@ -88,14 +88,26 @@ async def telegram_webhook(request: Request):
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "message": "Telegram Image Gallery is running!", "port": PORT}
+    return {"status": "healthy", "message": "Gaurav's Photo Gallery is running!", "port": PORT}
+
+@app.get("/sw.js")
+async def service_worker():
+    """Serve the service worker"""
+    from fastapi.responses import FileResponse
+    return FileResponse("static/sw.js", media_type="application/javascript")
+
+@app.get("/manifest.json")
+async def manifest():
+    """Serve the PWA manifest"""
+    from fastapi.responses import FileResponse
+    return FileResponse("static/manifest.json", media_type="application/json")
 
 @app.get("/test")
 async def test_page(request: Request):
     """Test page to verify the server is working"""
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "title": "Telegram Image Gallery - Test"
+        "title": "Gaurav's Photos - Test Page"
     })
 
 async def process_telegram_update(update_data: dict):

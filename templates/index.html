@@ -3,65 +3,376 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#3b82f6">
+    <meta name="theme-color" content="#87CEEB">
+    <meta name="description" content="Gaurav's precious moments captured in a beautiful photo gallery">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Gaurav's Photos">
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E📸%3C/text%3E%3C/svg%3E">
     <title>{{ title }}</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One:wght@400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'baby-blue': '#87CEEB',
+                        'baby-pink': '#FFB6C1',
+                        'sunny-yellow': '#FFE135',
+                        'mint-green': '#98FB98',
+                        'cream': '#FFFEF7'
+                    },
+                    fontFamily: {
+                        'playful': ['Fredoka One', 'cursive'],
+                        'friendly': ['Nunito', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
     <!-- Custom styles -->
     <link rel="stylesheet" href="/static/css/style.css">
     <!-- Alpine.js for reactive functionality -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-cream min-h-screen font-friendly cursor-fun">
     <!-- Header -->
-    <header class="bg-white shadow-sm sticky top-0 z-10">
-        <div class="container mx-auto px-4 py-4">
+    <header class="bg-gradient-to-r from-baby-blue via-baby-pink to-sunny-yellow shadow-lg sticky top-0 z-10">
+        <div class="container mx-auto px-4 py-6">
             <div class="flex items-center justify-between">
-                <h1 class="text-xl md:text-2xl font-bold text-gray-800">Telegram Image Gallery</h1>
-                <button @click="refreshGallery()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-sm flex items-center">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    Refresh
-                </button>
+                <div class="flex items-center space-x-3">
+                    <div class="text-4xl">📸</div>
+                    <div>
+                        <h1 class="text-2xl md:text-4xl font-playful text-white drop-shadow-lg">Gaurav's Photos</h1>
+                        <p class="text-white/90 text-sm font-friendly">✨ Precious moments captured ✨</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button @click="startSlideshow()" class="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm flex items-center transition-all duration-300 hover:scale-105 shadow-lg">
+                        🎬 Slideshow
+                    </button>
+                    <button @click="refreshGallery()" class="bg-white/20 backdrop-blur-sm hover:bg-white/30 text-white px-4 py-2 rounded-full text-sm flex items-center transition-all duration-300 hover:scale-105 shadow-lg">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                        </svg>
+                        🔄 Refresh
+                    </button>
+                </div>
             </div>
-            <p class="text-gray-600 text-sm mt-1">Images from our Telegram group</p>
         </div>
     </header>
 
     <!-- Main content -->
     <main x-data="galleryApp()" x-init="init()" class="container mx-auto px-4 py-6">
+        
+        <!-- Search and Stats Bar -->
+        <div x-show="!loading" class="mb-8 bg-white rounded-3xl shadow-lg p-6 border-4 border-baby-blue/20">
+            <!-- Selection Mode Controls -->
+            <div x-show="selectionMode" class="mb-6 p-4 bg-gradient-to-r from-baby-blue/10 to-baby-pink/10 rounded-2xl border-2 border-baby-blue/20">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">✅</span>
+                        <span class="font-playful text-baby-blue">Selection Mode</span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button @click="selectAllVisible()" class="bg-mint-green hover:bg-mint-green/80 text-white px-4 py-2 rounded-full text-sm font-friendly transition-all duration-300 hover:scale-105">
+                            Select All
+                        </button>
+                        <button @click="clearSelection()" class="bg-baby-pink hover:bg-baby-pink/80 text-white px-4 py-2 rounded-full text-sm font-friendly transition-all duration-300 hover:scale-105">
+                            Clear
+                        </button>
+                        <button @click="downloadSelected()" :disabled="selectedPhotos.length === 0" class="bg-sunny-yellow hover:bg-sunny-yellow/80 text-white px-4 py-2 rounded-full text-sm font-friendly transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                            📥 Download (<span x-text="selectedPhotos.length"></span>)
+                        </button>
+                        <button @click="toggleSelectionMode()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full text-sm font-friendly transition-all duration-300 hover:scale-105">
+                            Exit
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <!-- Search Bar -->
+                <div class="relative flex-1 max-w-md">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span class="text-2xl">🔍</span>
+                    </div>
+                    <input 
+                        x-model="searchQuery" 
+                        @input="searchPhotos()"
+                        type="text" 
+                        placeholder="Search photos..." 
+                        class="w-full pl-12 pr-12 py-3 border-2 border-baby-blue/30 rounded-full focus:border-baby-blue focus:outline-none font-friendly text-gray-700 bg-cream/50">
+                    <button 
+                        x-show="searchQuery" 
+                        @click="clearSearch()"
+                        class="absolute inset-y-0 right-0 pr-4 flex items-center text-baby-pink hover:text-baby-blue transition-colors">
+                        <span class="text-xl">❌</span>
+                    </button>
+                </div>
+                
+                <!-- Photo Stats & Selection Controls -->
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <!-- Stats -->
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-gradient-to-r from-baby-blue to-baby-pink rounded-full px-4 py-2">
+                            <div class="text-white font-playful text-lg" x-text="images.length"></div>
+                            <div class="text-white/90 text-xs font-friendly">Total Photos</div>
+                        </div>
+                        <div class="bg-gradient-to-r from-sunny-yellow to-mint-green rounded-full px-4 py-2">
+                            <div class="text-white font-playful text-lg" x-text="displayedImages.length"></div>
+                            <div class="text-white/90 text-xs font-friendly">Showing</div>
+                        </div>
+                        <div x-show="selectionMode" class="bg-gradient-to-r from-baby-pink to-sunny-yellow rounded-full px-4 py-2">
+                            <div class="text-white font-playful text-lg" x-text="selectedPhotos.length"></div>
+                            <div class="text-white/90 text-xs font-friendly">Selected</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap gap-2">
+                        <!-- View Mode Toggle -->
+                        <button @click="toggleViewMode()" 
+                                x-show="images.length > 0"
+                                :class="viewMode === 'grouped' ? 'bg-baby-blue text-white' : 'bg-baby-pink text-white'"
+                                class="hover:scale-105 px-4 py-2 rounded-full font-friendly text-sm transition-all duration-300 flex items-center space-x-2">
+                            <span x-text="viewMode === 'grouped' ? '📅' : '🔲'"></span>
+                            <span x-text="viewMode === 'grouped' ? 'Month View' : 'Grid View'"></span>
+                        </button>
+                        
+                        <!-- Slideshow Button -->
+                        <button @click="startSlideshow()" 
+                                x-show="images.length > 0"
+                                class="bg-baby-pink hover:bg-baby-blue text-white px-4 py-2 rounded-full font-friendly text-sm transition-all duration-300 hover:scale-105 flex items-center space-x-2">
+                            <span>🎬</span>
+                            <span>Slideshow</span>
+                        </button>
+                        
+                        <!-- Selection Mode Toggle -->
+                        <button @click="toggleSelectionMode()" 
+                                x-show="images.length > 0"
+                                :class="selectionMode ? 'bg-sunny-yellow text-gray-800' : 'bg-mint-green text-white'"
+                                class="hover:scale-105 px-4 py-2 rounded-full font-friendly text-sm transition-all duration-300 flex items-center space-x-2">
+                            <span>📋</span>
+                            <span x-text="selectionMode ? 'Exit Select' : 'Select Photos'"></span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Selection Controls -->
+                <div x-show="selectionMode" class="mt-4 p-4 bg-sunny-yellow/20 rounded-2xl border-2 border-sunny-yellow/30">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="flex flex-wrap gap-2">
+                            <button @click="selectAllVisible()" 
+                                    class="bg-baby-blue hover:bg-baby-pink text-white px-3 py-1 rounded-full text-sm font-friendly transition-colors">
+                                ✅ Select All Visible
+                            </button>
+                            <button @click="clearSelection()" 
+                                    class="bg-baby-pink hover:bg-baby-blue text-white px-3 py-1 rounded-full text-sm font-friendly transition-colors">
+                                ❌ Clear Selection
+                            </button>
+                        </div>
+                        <button @click="downloadSelected()" 
+                                x-show="selectedPhotos.length > 0"
+                                class="bg-mint-green hover:bg-baby-blue text-white px-4 py-2 rounded-full font-friendly text-sm transition-all duration-300 hover:scale-105 flex items-center space-x-2">
+                            <span>📦</span>
+                            <span x-text="`Download ${selectedPhotos.length} Photos`"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <!-- Loading indicator -->
-        <div x-show="loading" class="flex justify-center items-center py-12">
-            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+        <div x-show="loading" class="space-y-8">
+            <!-- Loading message -->
+            <div class="flex flex-col justify-center items-center py-8">
+                <div class="relative">
+                    <div class="animate-bounce text-6xl mb-4">🧸</div>
+                    <div class="animate-pulse text-baby-blue font-playful text-xl">Loading Gaurav's photos...</div>
+                </div>
+            </div>
+            
+            <!-- Skeleton grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                <template x-for="i in 12" :key="i">
+                    <div class="bg-white rounded-3xl shadow-lg overflow-hidden border-4 border-baby-blue/20 animate-pulse">
+                        <div class="aspect-square bg-gradient-to-br from-baby-blue/20 to-baby-pink/20"></div>
+                        <div class="p-4 space-y-2">
+                            <div class="h-4 bg-baby-blue/20 rounded-full"></div>
+                            <div class="h-3 bg-baby-pink/20 rounded-full w-2/3"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
         </div>
 
         <!-- Gallery grid -->
-        <div x-show="!loading" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <template x-for="image in images" :key="image.id">
-                <div class="bg-white rounded-lg shadow-sm overflow-hidden transform transition duration-300 hover:scale-[1.02]">
+        <div x-show="!loading && viewMode === 'grid'" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <template x-for="image in displayedImages" :key="image.id">
+                <div class="bg-white rounded-3xl shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl hover:rotate-1 border-4"
+                     :class="selectionMode && isPhotoSelected(image) ? 'border-sunny-yellow bg-sunny-yellow/10' : 'border-baby-blue/20'">
                     <div class="relative pb-[100%]"> <!-- 1:1 aspect ratio -->
                         <img :src="image.thumb_url" 
-                             :alt="image.caption || 'Image'"
-                             class="absolute inset-0 w-full h-full object-cover cursor-pointer"
+                             :alt="image.caption || 'Gaurav\\'s photo'"
+                             class="absolute inset-0 w-full h-full object-cover cursor-pointer transition-transform duration-300 hover:scale-110"
                              loading="lazy"
-                             @click="openLightbox(image)">
+                             @click="selectionMode ? togglePhotoSelection(image) : openLightbox(image)">
+                        
+                        <!-- Selection checkbox -->
+                        <div x-show="selectionMode" class="absolute top-2 left-2 z-10">
+                            <button @click="togglePhotoSelection(image)" 
+                                    class="w-8 h-8 rounded-full border-2 border-white bg-white/80 backdrop-blur-sm flex items-center justify-center transition-all duration-300 hover:scale-110"
+                                    :class="isPhotoSelected(image) ? 'bg-sunny-yellow text-white' : 'bg-white/80'">
+                                <span x-show="isPhotoSelected(image)" class="text-sm">✓</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Star decoration -->
+                        <div x-show="!selectionMode" class="absolute top-2 right-2 bg-sunny-yellow rounded-full p-1 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                            <span class="text-lg">⭐</span>
+                        </div>
+                        
+                        <!-- Quick download button -->
+                        <div x-show="!selectionMode" class="absolute bottom-2 right-2 opacity-0 hover:opacity-100 transition-opacity duration-300">
+                            <button @click.stop="currentImage = image; downloadImage()" 
+                                    class="bg-baby-blue/80 backdrop-blur-sm text-white rounded-full p-2 hover:bg-baby-blue transition-all duration-300 hover:scale-110">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </button>
+                        </div>
                     </div>
-                    <div class="p-3">
-                        <p x-show="image.caption" class="text-gray-700 text-sm line-clamp-2" x-text="image.caption"></p>
-                        <p class="text-gray-500 text-xs mt-1" x-text="formatDate(image.timestamp)"></p>
+                    <div class="p-4 bg-gradient-to-r from-baby-blue/10 to-baby-pink/10">
+                        <p x-show="image.caption" class="text-gray-700 text-sm line-clamp-2 font-friendly" x-text="image.caption"></p>
+                        <p class="text-baby-blue font-semibold text-xs mt-2" x-text="formatDate(image.timestamp)"></p>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Grouped View (Month-wise) -->
+        <div x-show="!loading && viewMode === 'grouped'" class="space-y-8">
+            <template x-for="[monthYear, group] in getSortedMonthGroups()" :key="monthYear">
+                <div class="bg-white rounded-3xl shadow-lg border-4 border-baby-blue/20 overflow-hidden">
+                    <!-- Month Header -->
+                    <div class="bg-gradient-to-r from-baby-blue via-baby-pink to-sunny-yellow p-6">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-4xl" x-text="getMonthEmoji(group.monthName)"></span>
+                                <div>
+                                    <h2 class="text-2xl font-playful text-white drop-shadow-lg" x-text="monthYear"></h2>
+                                    <p class="text-white/90 font-friendly" x-text="`${group.count} precious moments`"></p>
+                                </div>
+                            </div>
+                            <div class="text-white text-right">
+                                <div class="text-3xl">📸</div>
+                                <div class="text-sm font-friendly opacity-90" x-text="`${group.count} photos`"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Photos Grid for this month -->
+                    <div class="p-6">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            <template x-for="image in group.photos" :key="image.id">
+                                <div class="relative group cursor-pointer transform transition-all duration-300 hover:scale-105">
+                                    <div class="aspect-square rounded-2xl overflow-hidden shadow-md hover:shadow-xl border-2 border-baby-blue/20">
+                                        <img :src="image.thumb_url" 
+                                             :alt="image.caption || 'Gaurav\\'s photo'"
+                                             class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                             loading="lazy"
+                                             @click="openLightbox(image)">
+                                    </div>
+                                    
+                                    <!-- Hover overlay -->
+                                    <div class="absolute inset-0 bg-black/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                        <div class="bg-white/90 rounded-full p-2">
+                                            <svg class="h-6 w-6 text-baby-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Selection mode -->
+                                    <div x-show="selectionMode" class="absolute top-2 left-2">
+                                        <button @click.stop="togglePhotoSelection(image)" 
+                                                :class="isPhotoSelected(image) ? 'bg-sunny-yellow text-white' : 'bg-white/80 text-gray-600'"
+                                                class="rounded-full p-1.5 transition-all duration-300 hover:scale-110 shadow-lg">
+                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
             </template>
         </div>
 
         <!-- Empty state -->
-        <div x-show="!loading && images.length === 0" class="text-center py-12">
-            <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <h3 class="mt-4 text-lg font-medium text-gray-900">No images yet</h3>
-            <p class="mt-2 text-gray-500">Upload images to the Telegram group to see them appear here.</p>
+        <div x-show="!loading && images.length === 0" class="text-center py-16">
+            <div class="text-8xl mb-6 animate-bounce">👶</div>
+            <h3 class="text-2xl font-playful text-baby-blue mb-4">No photos yet!</h3>
+            <p class="text-gray-600 font-friendly text-lg">Share some adorable moments in the Telegram group 📱</p>
+            <div class="mt-6 text-4xl">📸✨</div>
+        </div>
+
+        <!-- No search results -->
+        <div x-show="!loading && images.length > 0 && displayedImages.length === 0" class="text-center py-16">
+            <div class="text-6xl mb-6">🔍</div>
+            <h3 class="text-xl font-playful text-baby-blue mb-4">No photos found!</h3>
+            <p class="text-gray-600 font-friendly">Try a different search term</p>
+            <button @click="clearSearch()" class="mt-4 bg-baby-pink hover:bg-baby-blue text-white px-6 py-2 rounded-full font-friendly transition-colors">
+                Clear Search ✨
+            </button>
+        </div>
+
+        <!-- Pagination -->
+        <div x-show="!loading && totalPages > 1" class="mt-12 flex justify-center">
+            <div class="bg-white rounded-3xl shadow-lg p-4 border-4 border-baby-blue/20">
+                <div class="flex items-center space-x-2">
+                    <!-- Previous button -->
+                    <button 
+                        @click="prevPage()" 
+                        :disabled="currentPage === 1"
+                        :class="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-baby-blue hover:text-white'"
+                        class="px-4 py-2 rounded-full font-friendly text-baby-blue transition-all duration-300">
+                        ← Prev
+                    </button>
+                    
+                    <!-- Page numbers -->
+                    <template x-for="page in getPageNumbers()" :key="page">
+                        <button 
+                            @click="goToPage(page)"
+                            :class="page === currentPage ? 'bg-baby-blue text-white' : 'text-baby-blue hover:bg-baby-blue/20'"
+                            class="w-10 h-10 rounded-full font-playful transition-all duration-300 hover:scale-110"
+                            x-text="page">
+                        </button>
+                    </template>
+                    
+                    <!-- Next button -->
+                    <button 
+                        @click="nextPage()" 
+                        :disabled="currentPage === totalPages"
+                        :class="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : 'hover:bg-baby-blue hover:text-white'"
+                        class="px-4 py-2 rounded-full font-friendly text-baby-blue transition-all duration-300">
+                        Next →
+                    </button>
+                </div>
+                
+                <!-- Page info -->
+                <div class="text-center mt-3 text-sm text-gray-600 font-friendly">
+                    <span x-text="`Page ${currentPage} of ${totalPages}`"></span>
+                    <span class="mx-2">•</span>
+                    <span x-text="`${displayedImages.length} photos`"></span>
+                </div>
+            </div>
         </div>
 
         <!-- Lightbox modal -->
@@ -72,32 +383,124 @@
              x-transition:leave="transition ease-in duration-200"
              x-transition:leave-start="opacity-100"
              x-transition:leave-end="opacity-0"
-             class="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-0"
+             class="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center p-0 lightbox-overlay"
              @click="lightboxOpen = false">
             
             <div class="relative w-full h-full flex items-center justify-center" @click.stop>
+                <!-- Close button -->
                 <button @click="lightboxOpen = false" 
-                        class="absolute top-4 right-4 text-white bg-black bg-opacity-50 rounded-full p-2 z-10 hover:bg-opacity-75 md:top-6 md:right-6">
+                        class="absolute top-4 right-4 text-white bg-baby-pink/30 backdrop-blur-sm rounded-full p-3 z-10 hover:bg-baby-pink/50 transition-all duration-300 hover:scale-110 md:top-6 md:right-6">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
+
+                <!-- Top controls -->
+                <div class="absolute top-4 right-4 flex items-center space-x-2 z-10 md:top-6 md:right-6">
+                    <!-- Share button -->
+                    <button @click="sharePhoto()" 
+                            class="text-white bg-mint-green/30 backdrop-blur-sm rounded-full p-3 hover:bg-mint-green/50 transition-all duration-300 hover:scale-110">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Share button -->
+                    <button @click="sharePhoto()" 
+                            class="text-white bg-mint-green/30 backdrop-blur-sm rounded-full p-3 hover:bg-mint-green/50 transition-all duration-300 hover:scale-110">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Download button -->
+                    <button @click="downloadImage()" 
+                            class="text-white bg-sunny-yellow/30 backdrop-blur-sm rounded-full p-3 hover:bg-sunny-yellow/50 transition-all duration-300 hover:scale-110">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Fullscreen button -->
+                    <button @click="toggleFullscreen()" 
+                            class="text-white bg-baby-blue/30 backdrop-blur-sm rounded-full p-3 hover:bg-baby-blue/50 transition-all duration-300 hover:scale-110">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                    </button>
+                    
+                    <!-- Slideshow toggle -->
+                    <button @click="slideshowActive ? stopSlideshow() : startSlideshow()" 
+                            :class="slideshowActive ? 'bg-baby-pink/50' : 'bg-baby-blue/30'"
+                            class="text-white backdrop-blur-sm rounded-full p-3 hover:bg-baby-blue/50 transition-all duration-300 hover:scale-110">
+                        <span x-text="slideshowActive ? '⏹️' : '🎬'" class="text-lg"></span>
+                    </button>
+                </div>
+
+                <!-- Previous button -->
+                <button x-show="currentIndex > 0" @click="prevImage()" 
+                        class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white bg-baby-blue/30 backdrop-blur-sm rounded-full p-4 z-10 hover:bg-baby-blue/50 transition-all duration-300 hover:scale-110">
+                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                    </svg>
+                </button>
+
+                <!-- Next button -->
+                <button x-show="currentIndex < images.length - 1" @click="nextImage()" 
+                        class="absolute right-4 top-1/2 transform -translate-y-1/2 text-white bg-baby-blue/30 backdrop-blur-sm rounded-full p-4 z-10 hover:bg-baby-blue/50 transition-all duration-300 hover:scale-110">
+                    <svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                    </svg>
+                </button>
                 
+                <!-- Main image -->
                 <img :src="currentImage.full_url" 
-                     :alt="currentImage.caption || 'Image'"
-                     class="max-h-[90vh] max-w-full object-contain">
+                     :alt="currentImage.caption || 'Gaurav\\'s precious moment'"
+                     class="max-h-[85vh] max-w-[90vw] object-contain rounded-2xl shadow-2xl">
                 
-                <div class="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white p-4">
-                    <p x-text="currentImage.caption" class="text-lg"></p>
+                <!-- Image info -->
+                <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent text-white p-6 rounded-b-2xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p x-show="currentImage.caption" x-text="currentImage.caption" class="text-lg font-friendly mb-2"></p>
+                            <p class="text-baby-blue font-semibold" x-text="formatDate(currentImage.timestamp)"></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sunny-yellow font-playful text-sm" x-text="`Photo ${currentIndex + 1} of ${images.length}`"></p>
+                            <div class="text-2xl mt-1">📸✨</div>
+                            <div class="text-xs text-white/70 mt-2 font-friendly">
+                                <div>← → Navigate • D Download • S Share</div>
+                                <div>F Fullscreen • Space Slideshow • Esc Close</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
+        <!-- Floating Action Button -->
+        <div x-show="!loading && images.length > 0 && !selectionMode" class="fixed bottom-6 right-6 z-40">
+            <button @click="toggleSelectionMode()" 
+                    class="bg-gradient-to-r from-baby-blue to-baby-pink text-white rounded-full p-4 shadow-2xl hover:shadow-3xl transition-all duration-300 hover:scale-110 animate-pulse-baby">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </button>
+            <div class="absolute -top-2 -right-2 bg-sunny-yellow text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold animate-bounce">
+                📋
+            </div>
+        </div>
+
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t mt-8">
-        <div class="container mx-auto px-4 py-6">
-            <p class="text-center text-gray-600 text-sm">Telegram Image Gallery &copy; 2023</p>
+    <footer class="bg-gradient-to-r from-mint-green via-baby-blue to-baby-pink mt-12">
+        <div class="container mx-auto px-4 py-8">
+            <div class="text-center">
+                <div class="text-3xl mb-2">💝</div>
+                <p class="text-white font-playful text-lg drop-shadow">Made with love for precious memories</p>
+                <p class="text-white/80 font-friendly text-sm mt-2">Gaurav's Photo Gallery ✨ 2024</p>
+            </div>
         </div>
     </footer>
 

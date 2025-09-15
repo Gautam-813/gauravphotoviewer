@@ -1,50 +1,265 @@
-/* Custom styles for the gallery */
+/* Custom styles for Gaurav's Baby Photo Gallery */
 
-/* Image hover effects - only on non-touch devices */
-@media (hover: hover) {
-    .gallery-image:hover {
-        transform: scale(1.05);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+/* Fun cursor animation */
+.cursor-fun {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="24" font-size="24">⭐</text></svg>'), auto;
+}
+
+.cursor-fun button,
+.cursor-fun img {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="24" font-size="24">👆</text></svg>'), pointer;
+}
+
+/* Cursor trail effect */
+.cursor-trail {
+    position: fixed;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #FFE135, #FFB6C1);
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.7;
+    animation: trail 0.6s ease-out forwards;
+}
+
+@keyframes trail {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(0);
+        opacity: 0;
     }
 }
 
-/* Loading spinner animation */
-.loading-spinner {
-    border-top-color: #3b82f6;
-    animation: spin 1s linear infinite;
+/* Floating animation for decorative elements */
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.animate-float {
+    animation: float 3s ease-in-out infinite;
 }
 
-/* Lightbox animations */
-.lightbox-enter-active {
-    transition: opacity 0.3s ease;
+/* Bouncy hover effects */
+.hover-bounce:hover {
+    animation: bounce 0.6s ease-in-out;
 }
 
-.lightbox-leave-active {
-    transition: opacity 0.2s ease;
+@keyframes bounce {
+
+    0%,
+    20%,
+    60%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    80% {
+        transform: translateY(-5px);
+    }
 }
 
-.lightbox-enter-from,
-.lightbox-leave-to {
-    opacity: 0;
+/* Custom scrollbar with baby theme */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: linear-gradient(to bottom, #87CEEB, #FFB6C1);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #FFE135, #98FB98);
+    border-radius: 10px;
+    border: 2px solid #FFFEF7;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, #FFD700, #90EE90);
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Custom line clamp utility */
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-clamp: 2;
+    overflow: hidden;
+}
+
+/* Playful loading animations */
+@keyframes wiggle {
+
+    0%,
+    7% {
+        transform: rotateZ(0);
+    }
+
+    15% {
+        transform: rotateZ(-15deg);
+    }
+
+    20% {
+        transform: rotateZ(10deg);
+    }
+
+    25% {
+        transform: rotateZ(-10deg);
+    }
+
+    30% {
+        transform: rotateZ(6deg);
+    }
+
+    35% {
+        transform: rotateZ(-4deg);
+    }
+
+    40%,
+    100% {
+        transform: rotateZ(0);
+    }
+}
+
+.animate-wiggle {
+    animation: wiggle 2s ease-in-out infinite;
+}
+
+/* Lightbox styles with baby theme */
+.lightbox-overlay {
+    backdrop-filter: blur(8px);
+    background: rgba(135, 206, 235, 0.1);
+}
+
+/* Photo card hover effects */
+.photo-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.photo-card:hover {
+    transform: translateY(-8px) rotate(2deg);
+    box-shadow: 0 20px 40px rgba(135, 206, 235, 0.3);
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* Ensure touch targets are large enough */
+    button {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    /* Reduce motion for mobile */
+    .photo-card:hover {
+        transform: translateY(-4px);
+    }
+}
+
+/* Focus styles for accessibility with baby theme */
+button:focus,
+img:focus {
+    outline: 3px solid #FFE135;
+    outline-offset: 3px;
+    border-radius: 8px;
+}
+
+/* Image loading placeholder with baby theme */
+img {
+    background: linear-gradient(45deg, #FFFEF7, #F0F8FF);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2387CEEB'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 3rem;
+}
+
+/* Sparkle animation for special elements */
+@keyframes sparkle {
+
+    0%,
+    100% {
+        opacity: 0;
+        transform: scale(0);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.animate-sparkle {
+    animation: sparkle 1.5s ease-in-out infinite;
+}
+
+/* Gradient text effect */
+.gradient-text {
+    background: linear-gradient(45deg, #87CEEB, #FFB6C1, #FFE135);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Soft glow effect */
+.soft-glow {
+    box-shadow: 0 0 20px rgba(135, 206, 235, 0.3);
+}
+
+/* Pulse animation for interactive elements */
+@keyframes pulse-baby {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 225, 53, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 225, 53, 0);
+    }
+}
+
+.animate-pulse-baby {
+    animation: pulse-baby 2s infinite;
 }
 
 /* Mobile-first responsive grid */
 .gallery-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 1.5rem;
 }
 
 /* Tablets */
 @media (min-width: 640px) {
     .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+        gap: 1.5rem;
     }
 }
 
@@ -52,7 +267,7 @@
 @media (min-width: 768px) {
     .gallery-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 1.25rem;
+        gap: 2rem;
     }
 }
 
@@ -60,36 +275,14 @@
 @media (min-width: 1024px) {
     .gallery-grid {
         grid-template-columns: repeat(4, 1fr);
-        gap: 1.5rem;
+        gap: 2rem;
     }
 }
 
-/* Smooth transitions */
-.transition-all {
-    transition-property: all;
-    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-    transition-duration: 150ms;
-}
-
-/* Text truncation for captions */
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-/* Mobile touch targets */
-button, a {
-    min-height: 44px;
-    min-width: 44px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
 /* Prevent zoom on iOS Safari */
-input, textarea, select {
+input,
+textarea,
+select {
     font-size: 16px;
 }
 
@@ -105,4 +298,383 @@ img {
     -ms-user-select: none;
     user-select: none;
     pointer-events: auto;
+}
+
+/* Image hover effects - only on non-touch devices */
+@media (hover: hover) {
+    .gallery-image:hover {
+        transform: scale(1.1);
+        box-shadow: 0 15px 35px rgba(135, 206, 235, 0.4);
+    }
+}
+
+/* Skeleton loading animations */
+@keyframes skeleton-loading {
+    0% {
+        background-position: -200px 0;
+    }
+
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200px 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+/* Enhanced pulse animation for baby theme */
+@keyframes pulse-baby-theme {
+
+    0%,
+    100% {
+        opacity: 1;
+        background: linear-gradient(45deg, #87CEEB20, #FFB6C120);
+    }
+
+    50% {
+        opacity: 0.7;
+        background: linear-gradient(45deg, #FFE13520, #98FB9820);
+    }
+}
+
+.animate-pulse {
+    animation: pulse-baby-theme 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Search input focus effects */
+input:focus {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 4px rgba(135, 206, 235, 0.2);
+}
+
+/* Pagination button effects */
+.pagination-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.pagination-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255, 225, 53, 0.3) 0%, transparent 70%);
+    transition: all 0.3s ease;
+    transform: translate(-50%, -50%);
+}
+
+.pagination-btn:hover::before {
+    width: 100px;
+    height: 100px;
+}
+
+/* Selection mode styles */
+.selection-mode .photo-card {
+    cursor: pointer;
+}
+
+.selection-mode .photo-card:hover {
+    transform: translateY(-4px) scale(1.02);
+}
+
+.photo-selected {
+    transform: translateY(-8px) scale(1.05);
+    box-shadow: 0 20px 40px rgba(255, 225, 53, 0.4);
+}
+
+/* Slideshow indicator */
+.slideshow-active {
+    animation: slideshow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes slideshow-pulse {
+    0%, 100% { 
+        box-shadow: 0 0 0 0 rgba(255, 182, 193, 0.7);
+    }
+    50% { 
+        box-shadow: 0 0 0 15px rgba(255, 182, 193, 0);
+    }
+}
+
+/* Notification styles */
+.notification {
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Quick download button */
+.quick-download {
+    backdrop-filter: blur(8px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quick-download:hover {
+    transform: scale(1.1);
+    box-shadow: 0 5px 15px rgba(255, 225, 53, 0.4);
+}
+
+/* Lightbox button group */
+.lightbox-buttons {
+    backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    padding: 8px;
+}
+
+/* Enhanced hover effects for interactive elements */
+button:hover {
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+/* Fullscreen mode adjustments */
+:fullscreen .lightbox-overlay {
+    background: rgba(0, 0, 0, 0.98);
+}
+
+:fullscreen img {
+    max-height: 100vh;
+    max-width: 100vw;
+}
+
+/* Mobile touch improvements */
+@media (max-width: 768px) {
+    .lightbox-buttons button {
+        padding: 12px;
+        margin: 4px;
+    }
+    
+    .selection-checkbox {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* Selection mode styles */
+.photo-selected {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 4px #FFE135;
+}
+
+/* Floating action button */
+.fab {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+}
+
+/* Enhanced hover effects for interactive elements */
+.interactive-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Slideshow indicator */
+.slideshow-active {
+    animation: slideshow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes slideshow-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Selection checkbox animation */
+.selection-checkbox {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.selection-checkbox:hover {
+    transform: scale(1.1);
+}
+
+/* Notification styles */
+.notification {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Quick download button */
+.quick-download {
+    backdrop-filter: blur(8px);
+    transition: all 0.3s ease;
+}
+
+.quick-download:hover {
+    backdrop-filter: blur(12px);
+    transform: scale(1.1);
+}
+
+/* Enhanced lightbox controls */
+.lightbox-control {
+    backdrop-filter: blur(12px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lightbox-control:hover {
+    backdrop-filter: blur(16px);
+    transform: scale(1.1);
+}
+
+/* Mobile enhancements for touch */
+@media (max-width: 768px) {
+    .fab {
+        bottom: 1rem;
+        right: 1rem;
+    }
+    
+    .lightbox-control {
+        padding: 0.75rem;
+    }
+    
+    .selection-checkbox {
+        width: 2.5rem;
+        height: 2.5rem;
+    }
+}
+/
+* Advanced Mobile Optimizations */
+@media (max-width: 768px) {
+    /* Mobile-specific lightbox adjustments */
+    .lightbox-overlay img {
+        max-height: 80vh;
+        max-width: 95vw;
+    }
+    
+    /* Larger touch targets for mobile */
+    .lightbox-overlay button {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 12px;
+    }
+    
+    /* Stack action buttons vertically on small screens */
+    .lightbox-controls {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    /* Mobile search bar */
+    .search-input {
+        font-size: 16px; /* Prevent zoom on iOS */
+    }
+    
+    /* Mobile pagination */
+    .pagination-mobile {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    /* Hide cursor trail on mobile */
+    .cursor-trail {
+        display: none;
+    }
+    
+    /* Optimize gallery grid for mobile */
+    .gallery-grid {
+        gap: 1rem;
+    }
+}
+
+/* Touch device optimizations */
+.touch-device .photo-card:hover {
+    transform: none;
+}
+
+.touch-device .cursor-fun {
+    cursor: default;
+}
+
+/* Mobile device specific */
+.mobile-device {
+    -webkit-overflow-scrolling: touch;
+}
+
+.mobile-device * {
+    /* Reduce animations for better performance */
+    animation-duration: 0.2s !important;
+    transition-duration: 0.2s !important;
+}
+
+/* iOS specific optimizations */
+@supports (-webkit-touch-callout: none) {
+    .lightbox-overlay {
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    input {
+        font-size: 16px;
+        transform: translateZ(0);
+    }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .lightbox-overlay img {
+        max-height: 90vh;
+    }
+    
+    .lightbox-controls {
+        flex-direction: row;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .search-bar {
+        margin-bottom: 1rem;
+    }
+    
+    .pagination-mobile button {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+}
+
+/* Performance optimizations */
+.photo-card {
+    will-change: transform;
+    contain: layout style paint;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .cursor-trail {
+        display: none;
+    }
+    
+    .animate-bounce,
+    .animate-float,
+    .animate-wiggle {
+        animation: none;
+    }
 }
