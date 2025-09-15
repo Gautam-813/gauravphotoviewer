@@ -510,6 +510,35 @@ function galleryApp() {
             this.showNotification('📸 Gallery refreshed! ✨', 'success');
         },
 
+        // Fetch historical photos from Telegram
+        async fetchHistory() {
+            try {
+                this.showNotification('📚 Fetching photos from Telegram history...', 'info');
+
+                const response = await fetch('/api/fetch-history');
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Refresh the gallery to show new photos
+                    await this.loadImages();
+
+                    if (result.new_photos_added > 0) {
+                        this.showNotification(
+                            `🎉 Found ${result.new_photos_added} historical photos! Total: ${result.total_photos}`,
+                            'success'
+                        );
+                    } else {
+                        this.showNotification('📚 No new historical photos found', 'info');
+                    }
+                } else {
+                    this.showNotification(`❌ Error: ${result.message}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching history:', error);
+                this.showNotification('❌ Failed to fetch history', 'error');
+            }
+        },
+
         // Show notification
         showNotification(message, type = 'info') {
             const notification = document.createElement('div');

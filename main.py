@@ -36,10 +36,41 @@ try:
 except Exception as e:
     logger.error(f"Error initializing templates: {e}")
 
-# In-memory storage for image data (in production, use a database)
-# This will store image metadata fetched from Telegram
-images_data: List[Dict] = []
-logger.info("Image data storage initialized")
+# Persistent storage for image data
+import json
+from pathlib import Path
+
+# Storage file path
+STORAGE_FILE = "images_storage.json"
+
+# Load existing images from file or create empty list
+def load_images_from_storage():
+    """Load images from persistent storage file"""
+    try:
+        if Path(STORAGE_FILE).exists():
+            with open(STORAGE_FILE, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                logger.info(f"Loaded {len(data)} images from storage")
+                return data
+        else:
+            logger.info("No existing storage file found, starting with empty gallery")
+            return []
+    except Exception as e:
+        logger.error(f"Error loading images from storage: {e}")
+        return []
+
+def save_images_to_storage():
+    """Save images to persistent storage file"""
+    try:
+        with open(STORAGE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(images_data, f, indent=2, ensure_ascii=False)
+        logger.info(f"Saved {len(images_data)} images to storage")
+    except Exception as e:
+        logger.error(f"Error saving images to storage: {e}")
+
+# Load images from persistent storage
+images_data: List[Dict] = load_images_from_storage()
+logger.info(f"Image data storage initialized with {len(images_data)} existing photos")
 
 # Telegram bot configuration (to be set via environment variables)
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
@@ -50,6 +81,23 @@ logger.info("Environment variables loaded")
 async def startup_event():
     logger.info("Application startup complete")
     logger.info(f"Application is ready to accept connections on port {PORT}")
+    
+    # Auto-fetch history if storage is empty (first time setup)
+    if len(images_data) == 0:
+        logger.info("Empty storage detected, fetching chat history...")
+        try:
+            historical_photos = await fetch_chat_history()
+            if historical_photos:
+                global images_data
+                images_data.extend(historical_photos)
+                save_images_to_storage()
+                logger.info(f"Auto-loaded {len(historical_photos)} photos from chat history")
+            else:
+                logger.info("No historical photos found in chat")
+        except Exception as e:
+            logger.error(f"Error auto-fetching history: {e}")
+    else:
+        logger.info(f"Found {len(images_data)} existing photos in storage")
 
 @app.on_event("shutdown")
 async def shutdown_event():
@@ -102,6 +150,62 @@ async def manifest():
     from fastapi.responses import FileResponse
     return FileResponse("static/manifest.json", media_type="application/json")
 
+@app.get("/api/storage-info")
+async def storage_info():
+    """Get storage information"""
+    storage_exists = Path(STORAGE_FILE).exists()
+    storage_size = Path(STORAGE_FILE).stat().st_size if storage_exists else 0
+    return {
+        "storage_file": STORAGE_FILE,
+        "exists": storage_exists,
+        "size_bytes": storage_size,
+        "total_images": len(images_data),
+        "status": "Storage is working properly! 📸✨"
+    }
+
+@app.get("/api/fetch-history")
+async def fetch_history():
+    """Manually fetch all photos from Telegram chat history"""
+    try:
+        logger.info("Manual history fetch requested")
+        historical_photos = await fetch_chat_history()
+        
+        if historical_photos:
+            # Add historical photos to our storage
+            global images_data
+            initial_count = len(images_data)
+            
+            # Add new photos (duplicates are already filtered out)
+            for photo in historical_photos:
+                images_data.append(photo)
+            
+            # Save to persistent storage
+            save_images_to_storage()
+            
+            new_count = len(images_data) - initial_count
+            logger.info(f"Added {new_count} historical photos")
+            
+            return {
+                "status": "success",
+                "message": f"Fetched {len(historical_photos)} photos from history",
+                "new_photos_added": new_count,
+                "total_photos": len(images_data)
+            }
+        else:
+            return {
+                "status": "success", 
+                "message": "No new historical photos found",
+                "new_photos_added": 0,
+                "total_photos": len(images_data)
+            }
+            
+    except Exception as e:
+        logger.error(f"Error in manual history fetch: {e}")
+        return {
+            "status": "error",
+            "message": f"Failed to fetch history: {str(e)}"
+        }
+
 @app.get("/test")
 async def test_page(request: Request):
     """Test page to verify the server is working"""
@@ -151,8 +255,9 @@ async def process_photo_message(message: dict):
             "full_url": f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}"
         }
         
-        # Add to our images data (in production, save to database)
+        # Add to our images data and save to persistent storage
         images_data.append(image_data)
+        save_images_to_storage()  # Save to file immediately
         logger.info(f"Added new image: {image_data['file_id']}")
 
 async def process_document_message(message: dict):
@@ -177,8 +282,9 @@ async def process_document_message(message: dict):
             "full_url": f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}"
         }
         
-        # Add to our images data (in production, save to database)
+        # Add to our images data and save to persistent storage
         images_data.append(image_data)
+        save_images_to_storage()  # Save to file immediately
         logger.info(f"Added new document image: {image_data['file_id']}")
 
 def is_image_document(document: dict) -> bool:
@@ -208,6 +314,136 @@ async def get_file_path(file_id: str) -> str:
         logger.error(f"Error getting file path: {e}")
     
     return ""
+
+async def fetch_chat_history():
+    """Fetch all existing photos from Telegram group chat history"""
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        logger.error("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID not set")
+        return []
+    
+    logger.info("Fetching chat history to get existing photos...")
+    all_photos = []
+    offset = 0
+    limit = 100  # Telegram API limit per request
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            while True:
+                # Get chat history using getUpdates with offset
+                url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/getUpdates"
+                params = {
+                    "offset": offset,
+                    "limit": limit,
+                    "timeout": 10
+                }
+                
+                async with session.get(url, params=params) as response:
+                    if response.status != 200:
+                        logger.error(f"HTTP error {response.status} when fetching chat history")
+                        break
+                    
+                    data = await response.json()
+                    if not data.get("ok"):
+                        logger.error(f"Telegram API error: {data}")
+                        break
+                    
+                    updates = data.get("result", [])
+                    if not updates:
+                        break  # No more updates
+                    
+                    # Process each update for photos
+                    for update in updates:
+                        if "message" in update:
+                            message = update["message"]
+                            
+                            # Check if message is from our target chat
+                            if str(message.get("chat", {}).get("id")) == str(TELEGRAM_CHAT_ID):
+                                # Process photos in this message
+                                if "photo" in message:
+                                    photo_data = await process_photo_message_history(message)
+                                    if photo_data:
+                                        all_photos.append(photo_data)
+                                elif "document" in message and is_image_document(message["document"]):
+                                    photo_data = await process_document_message_history(message)
+                                    if photo_data:
+                                        all_photos.append(photo_data)
+                    
+                    # Update offset for next batch
+                    if updates:
+                        offset = updates[-1]["update_id"] + 1
+                    else:
+                        break
+                    
+                    # Limit to prevent infinite loop (adjust as needed)
+                    if len(all_photos) > 1000:  # Safety limit
+                        logger.warning("Reached safety limit of 1000 photos from history")
+                        break
+        
+        logger.info(f"Fetched {len(all_photos)} photos from chat history")
+        return all_photos
+        
+    except Exception as e:
+        logger.error(f"Error fetching chat history: {e}")
+        return []
+
+async def process_photo_message_history(message: dict):
+    """Process a photo message from chat history"""
+    try:
+        photos = message["photo"]
+        largest_photo = photos[-1]  # Last photo is the largest
+        
+        # Check if we already have this photo (avoid duplicates)
+        existing_photo = next((img for img in images_data if img["file_id"] == largest_photo["file_id"]), None)
+        if existing_photo:
+            return None  # Skip duplicate
+        
+        file_path = await get_file_path(largest_photo["file_id"])
+        if file_path:
+            return {
+                "id": largest_photo["file_id"],
+                "file_id": largest_photo["file_id"],
+                "file_unique_id": largest_photo["file_unique_id"],
+                "width": largest_photo["width"],
+                "height": largest_photo["height"],
+                "timestamp": message.get("date", datetime.now().timestamp()),
+                "caption": message.get("caption", ""),
+                "message_id": message["message_id"],
+                "thumb_url": f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}",
+                "full_url": f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}",
+                "from_history": True  # Mark as historical photo
+            }
+    except Exception as e:
+        logger.error(f"Error processing photo from history: {e}")
+    return None
+
+async def process_document_message_history(message: dict):
+    """Process a document message from chat history"""
+    try:
+        document = message["document"]
+        
+        # Check if we already have this document (avoid duplicates)
+        existing_doc = next((img for img in images_data if img["file_id"] == document["file_id"]), None)
+        if existing_doc:
+            return None  # Skip duplicate
+        
+        file_path = await get_file_path(document["file_id"])
+        if file_path:
+            return {
+                "id": document["file_id"],
+                "file_id": document["file_id"],
+                "file_unique_id": document["file_unique_id"],
+                "file_name": document["file_name"],
+                "mime_type": document["mime_type"],
+                "timestamp": message.get("date", datetime.now().timestamp()),
+                "caption": message.get("caption", ""),
+                "message_id": message["message_id"],
+                "thumb_url": f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}",
+                "full_url": f"https://api.telegram.org/file/bot{TELEGRAM_BOT_TOKEN}/{file_path}",
+                "from_history": True  # Mark as historical photo
+            }
+    except Exception as e:
+        logger.error(f"Error processing document from history: {e}")
+    return None
 
 # For development/testing purposes
 @app.get("/api/test-data")
@@ -242,6 +478,7 @@ async def add_test_data():
     
     global images_data
     images_data.extend(test_images)
+    save_images_to_storage()  # Save test data to storage too
     return {"status": "Test data added", "count": len(test_images)}
 
 # Endpoint to manually trigger webhook setup (for testing)

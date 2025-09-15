@@ -143,6 +143,13 @@
                             <span x-text="viewMode === 'grouped' ? 'Month View' : 'Grid View'"></span>
                         </button>
                         
+                        <!-- Fetch History Button -->
+                        <button @click="fetchHistory()" 
+                                class="bg-mint-green hover:bg-baby-blue text-white px-4 py-2 rounded-full font-friendly text-sm transition-all duration-300 hover:scale-105 flex items-center space-x-2">
+                            <span>📚</span>
+                            <span>Fetch History</span>
+                        </button>
+                        
                         <!-- Slideshow Button -->
                         <button @click="startSlideshow()" 
                                 x-show="images.length > 0"
