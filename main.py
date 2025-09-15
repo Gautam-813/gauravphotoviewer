@@ -9,29 +9,51 @@ import os
 import aiohttp
 from datetime import datetime
 
-# Initialize FastAPI app
-app = FastAPI(title="Telegram Image Gallery")
+# Set up logging early
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+logger.info("Starting Telegram Image Gallery application")
 
 # Get port from environment variable (Render sets this)
 PORT = int(os.environ.get("PORT", 8000))
+logger.info(f"Configured port: {PORT}")
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+# Initialize FastAPI app
+app = FastAPI(title="Telegram Image Gallery")
+logger.info("FastAPI app initialized")
 
 # Mount static files directory
-app.mount("/static", StaticFiles(directory="static"), name="static")
+try:
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+    logger.info("Static files mounted")
+except Exception as e:
+    logger.error(f"Error mounting static files: {e}")
 
 # Set up Jinja2 templates
-templates = Jinja2Templates(directory="templates")
+try:
+    templates = Jinja2Templates(directory="templates")
+    logger.info("Templates initialized")
+except Exception as e:
+    logger.error(f"Error initializing templates: {e}")
 
 # In-memory storage for image data (in production, use a database)
 # This will store image metadata fetched from Telegram
 images_data: List[Dict] = []
+logger.info("Image data storage initialized")
 
 # Telegram bot configuration (to be set via environment variables)
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+logger.info("Environment variables loaded")
+
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Application startup complete")
+    logger.info(f"Application is ready to accept connections on port {PORT}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Application shutdown")
 
 @app.get("/", response_class=HTMLResponse)
 async def read_home(request: Request):
@@ -66,7 +88,7 @@ async def telegram_webhook(request: Request):
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "message": "Telegram Image Gallery is running!"}
+    return {"status": "healthy", "message": "Telegram Image Gallery is running!", "port": PORT}
 
 @app.get("/test")
 async def test_page(request: Request):
@@ -239,5 +261,14 @@ if __name__ == "__main__":
     
     # Get port from environment variable (Render sets this)
     port = int(os.environ.get("PORT", 8000))
+    logger.info(f"Starting server on port {port}")
     
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Log startup information
+    logger.info("Starting uvicorn server...")
+    logger.info(f"Host: 0.0.0.0, Port: {port}")
+    
+    try:
+        uvicorn.run(app, host="0.0.0.0", port=port, log_level="info")
+    except Exception as e:
+        logger.error(f"Failed to start server: {e}")
+        raise
