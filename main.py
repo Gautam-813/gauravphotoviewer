@@ -79,6 +79,8 @@ logger.info("Environment variables loaded")
 
 @app.on_event("startup")
 async def startup_event():
+    global images_data  # Declare global at the top of the function
+    
     logger.info("Application startup complete")
     logger.info(f"Application is ready to accept connections on port {PORT}")
     
@@ -88,7 +90,6 @@ async def startup_event():
         try:
             historical_photos = await fetch_chat_history()
             if historical_photos:
-                global images_data
                 images_data.extend(historical_photos)
                 save_images_to_storage()
                 logger.info(f"Auto-loaded {len(historical_photos)} photos from chat history")
@@ -166,13 +167,14 @@ async def storage_info():
 @app.get("/api/fetch-history")
 async def fetch_history():
     """Manually fetch all photos from Telegram chat history"""
+    global images_data  # Declare global at the top of the function
+    
     try:
         logger.info("Manual history fetch requested")
         historical_photos = await fetch_chat_history()
         
         if historical_photos:
             # Add historical photos to our storage
-            global images_data
             initial_count = len(images_data)
             
             # Add new photos (duplicates are already filtered out)
@@ -449,6 +451,8 @@ async def process_document_message_history(message: dict):
 @app.get("/api/test-data")
 async def add_test_data():
     """Add some test data for development"""
+    global images_data  # Declare global at the top of the function
+    
     test_images = [
         {
             "id": "test1",
@@ -476,7 +480,6 @@ async def add_test_data():
         }
     ]
     
-    global images_data
     images_data.extend(test_images)
     save_images_to_storage()  # Save test data to storage too
     return {"status": "Test data added", "count": len(test_images)}
