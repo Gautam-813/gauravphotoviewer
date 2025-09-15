@@ -12,6 +12,9 @@ from datetime import datetime
 # Initialize FastAPI app
 app = FastAPI(title="Telegram Image Gallery")
 
+# Get port from environment variable (Render sets this)
+PORT = int(os.environ.get("PORT", 8000))
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -232,4 +235,9 @@ async def setup_webhook(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    
+    # Get port from environment variable (Render sets this)
+    port = int(os.environ.get("PORT", 8000))
+    
+    uvicorn.run(app, host="0.0.0.0", port=port)
