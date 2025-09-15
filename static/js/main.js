@@ -513,7 +513,7 @@ function galleryApp() {
         // Fetch historical photos from Telegram
         async fetchHistory() {
             try {
-                this.showNotification('📚 Fetching photos from Telegram history...', 'info');
+                this.showNotification('📚 Fetching recent photos from Telegram...', 'info');
 
                 const response = await fetch('/api/fetch-history');
                 const result = await response.json();
@@ -524,18 +524,47 @@ function galleryApp() {
 
                     if (result.new_photos_added > 0) {
                         this.showNotification(
-                            `🎉 Found ${result.new_photos_added} historical photos! Total: ${result.total_photos}`,
+                            `🎉 Found ${result.new_photos_added} recent photos! Total: ${result.total_photos}`,
                             'success'
                         );
                     } else {
-                        this.showNotification('📚 No new historical photos found', 'info');
+                        this.showNotification('📚 No recent photos found. For older photos, click "Get Old Photos"!', 'info');
                     }
                 } else {
                     this.showNotification(`❌ Error: ${result.message}`, 'error');
                 }
             } catch (error) {
                 console.error('Error fetching history:', error);
-                this.showNotification('❌ Failed to fetch history', 'error');
+                this.showNotification('❌ Failed to fetch recent photos', 'error');
+            }
+        },
+
+        // Show guide for getting old photos
+        async showExportGuide() {
+            try {
+                const response = await fetch('/api/telegram-export-guide');
+                const guide = await response.json();
+
+                // Create a detailed guide message
+                const message = `📚 HOW TO GET ALL OLD PHOTOS:
+
+🥇 BEST METHOD: Ask Group Members
+• Post in group: "Hey! I set up a photo gallery. Can you re-share your favorite old photos of Gaurav? They'll appear automatically! 📸✨"
+• When people re-share, photos appear instantly
+• Easy and gets the best photos!
+
+📋 OTHER OPTIONS:
+• Telegram Desktop Export (gets ALL photos)
+• Manual photo upload via API
+• Visit /api/telegram-export-guide for full details
+
+Current gallery: ${this.images.length} photos`;
+
+                alert(message);
+                this.showNotification('💡 Check the guide for getting old photos!', 'info');
+
+            } catch (error) {
+                this.showNotification('❌ Failed to load guide', 'error');
             }
         },
 
